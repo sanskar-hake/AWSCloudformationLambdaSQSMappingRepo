@@ -1,0 +1,30 @@
+Resources: 
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: arn:aws:iam::489455091964:role/service-role/lambda-demo-sqs-role-y4d17dt1   #Used Role Created in AWS Console
+      Code: 
+        ZipFile: |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              for record in event['Records']:
+                  mails = record["body"].split(",")
+                  for mail in mails:
+                      print("Hello " + mail)
+              return "success"
+
+  LambdaFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      Enabled: true
+      EventSourceArn: !GetAtt MySQSQueue.Arn
+      FunctionName: !GetAtt LambdaFunction.Arn
+
+  MySQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 30
